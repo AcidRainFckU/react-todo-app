@@ -18,7 +18,7 @@ enum Action {
 type SetAction = {
   type: Action
   payload: {
-    id: number
+    id?: number
     text: string
     complited: boolean
   }
@@ -36,16 +36,32 @@ function reducer(state: Todo[], action: SetAction) {
         },
       ]
     case 'REM_TUSK':
-      if (window.confirm('Удалить задачу?')) {
+      if (action.payload?.id) {
         return state.filter((tusk) => tusk.id !== action.payload.id)
+      } else {
+        return []
       }
-      return state
     case 'CHANGE_COMPLITED':
-      return state.map((tusk) =>
-        tusk.id === action.payload.id
-          ? { ...tusk, complited: !tusk.complited }
-          : tusk
-      )
+      if (action.payload?.id) {
+        return state.map((tusk) => {
+          if (tusk.id === action.payload.id) {
+            return { ...tusk, complited: !tusk.complited }
+          } else {
+            return tusk
+          }
+        })
+      } else {
+        if (!action.payload.complited) {
+          return state.map((tusk) => {
+            return { ...tusk, complited: false }
+          })
+        } else {
+          return state.map((tusk) => {
+            return { ...tusk, complited: true }
+          })
+        }
+      }
+
     default:
       return state
   }
@@ -53,6 +69,24 @@ function reducer(state: Todo[], action: SetAction) {
 
 function App() {
   const [state, dispatch] = useReducer(reducer, [])
+
+  const removeTask = (id?: number) => {
+    if (id) {
+      if (window.confirm('Удалить задачу?')) {
+        dispatch({ type: 'REM_TUSK', payload: { id } } as SetAction)
+      }
+    } else {
+      if (window.confirm('Удалить все задачи?')) {
+        dispatch({ type: 'REM_TUSK' } as SetAction)
+      }
+    }
+  }
+  const togleCheck = (id?: number, complited?: boolean) => {
+    dispatch({
+      type: 'CHANGE_COMPLITED',
+      payload: { id, complited },
+    } as SetAction)
+  }
 
   return (
     <div className="App">
@@ -72,17 +106,27 @@ function App() {
           {state.map((item: Todo) => (
             <Item
               text={item.text}
-              dispatch={dispatch}
               key={item.id}
               id={item.id}
               complited={item.complited}
+              removeTask={removeTask}
+              togleCheck={togleCheck}
             />
           ))}
         </List>
         <Divider />
         <div className="check-buttons">
-          <Button>Отметить всё</Button>
-          <Button>Очистить</Button>
+          <Button onClick={() => removeTask()}>Очистить</Button>
+
+          {state.every((el) => el.complited) ? (
+            <Button onClick={() => togleCheck(undefined, false)}>
+              Убрать все отметки
+            </Button>
+          ) : (
+            <Button onClick={() => togleCheck(undefined, true)}>
+              Отметить всё
+            </Button>
+          )}
         </div>
       </Paper>
     </div>
