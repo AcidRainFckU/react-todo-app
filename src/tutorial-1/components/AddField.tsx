@@ -9,7 +9,7 @@ type Props = {
 }
 
 export const AddField: React.FC<Props> = ({ dispatch }) => {
-  const [text, setText] = useState<string>()
+  const [text, setText] = useState<string>('')
   const [checked, setChecked] = useState<boolean>(false)
 
   function addTusk(event: any) {
@@ -25,7 +25,7 @@ export const AddField: React.FC<Props> = ({ dispatch }) => {
         className="checkbox"
         icon={<RadioButtonUncheckedIcon />}
         checkedIcon={<CheckCircleIcon />}
-        checked={checked ? checked : false}
+        checked={checked}
         onClick={() => setChecked(!checked)}
       />
       <TextField
@@ -33,7 +33,7 @@ export const AddField: React.FC<Props> = ({ dispatch }) => {
         placeholder="Введите текст задачи..."
         fullWidth
         required
-        value={text ? text : ''} //Без такой записи выдаёт ошибку
+        value={text} //Без такой записи выдаёт ошибку
         onChange={(e) => setText(e.target.value)}
       />
       <Button type="submit">
