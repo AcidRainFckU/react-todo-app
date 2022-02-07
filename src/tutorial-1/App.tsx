@@ -36,7 +36,10 @@ function reducer(state: Todo[], action: SetAction) {
         },
       ]
     case 'REM_TUSK':
-      return state.filter((tusk) => tusk.id !== action.payload.id)
+      if (window.confirm('Удалить задачу?')) {
+        return state.filter((tusk) => tusk.id !== action.payload.id)
+      }
+      return state
     case 'CHANGE_COMPLITED':
       return state.map((tusk) =>
         tusk.id === action.payload.id
