@@ -11,8 +11,10 @@ type Todo = {
 
 enum Action {
   ADD_TUSK = 'ADD_TUSK',
-  REM_TUSK = 'REM_TUSK',
+  REMOVE_TUSK = 'REMOVE_TUSK',
   CHANGE_COMPLITED = 'CHANGE_COMPLITED',
+  CLEAR_TUSKS = 'CLEAR_TUSKS',
+  COMPLETE_ALL_TUSK = 'COMPLETE_ALL_TUSK',
 }
 
 type SetAction = {
@@ -35,17 +37,24 @@ function reducer(state: Todo[], action: SetAction) {
           complited: action.payload.complited,
         },
       ]
-    case 'REM_TUSK':
-      if (window.confirm('Удалить задачу?')) {
-        return state.filter((tusk) => tusk.id !== action.payload.id)
-      }
-      return state
+    case 'REMOVE_TUSK':
+      return state.filter((tusk) => tusk.id !== action.payload.id)
+
     case 'CHANGE_COMPLITED':
-      return state.map((tusk) =>
-        tusk.id === action.payload.id
-          ? { ...tusk, complited: !tusk.complited }
-          : tusk
-      )
+      return state.map((tusk) => {
+        if (tusk.id === action.payload.id) {
+          return { ...tusk, complited: !tusk.complited }
+        } else {
+          return tusk
+        }
+      })
+    case 'CLEAR_TUSKS':
+      return []
+    case 'COMPLETE_ALL_TUSK':
+      return state.map((task) => {
+        return { ...task, complited: action.payload.complited }
+      })
+
     default:
       return state
   }
@@ -53,6 +62,15 @@ function reducer(state: Todo[], action: SetAction) {
 
 function App() {
   const [state, dispatch] = useReducer(reducer, [])
+
+  const celarState = () => {
+    if (window.confirm('Удалить все задачи?')) {
+      dispatch({ type: 'CLEAR_TUSKS' } as SetAction)
+    }
+  }
+  const completeAllTusk = (complited: boolean) => {
+    dispatch({ type: 'COMPLETE_ALL_TUSK', payload: { complited } } as SetAction)
+  }
 
   return (
     <div className="App">
@@ -81,8 +99,14 @@ function App() {
         </List>
         <Divider />
         <div className="check-buttons">
-          <Button>Отметить всё</Button>
-          <Button>Очистить</Button>
+          {state.some((task) => task.complited === false) ? (
+            <Button onClick={() => completeAllTusk(true)}>Отметить всё</Button>
+          ) : (
+            <Button onClick={() => completeAllTusk(false)}>
+              Снять отметки
+            </Button>
+          )}
+          <Button onClick={celarState}>Очистить</Button>
         </div>
       </Paper>
     </div>

@@ -13,6 +13,12 @@ type Props = {
   id: number
 }
 export const Item: React.FC<Props> = ({ text, dispatch, complited, id }) => {
+  const removeTask = () => {
+    if (window.confirm('Удалить задачу?')) {
+      dispatch({ type: 'REMOVE_TUSK', payload: { id } })
+    }
+  }
+
   return (
     <ListItem>
       <div className="d-flex item">
@@ -29,9 +35,7 @@ export const Item: React.FC<Props> = ({ text, dispatch, complited, id }) => {
           <IconButton>
             <EditIcon style={{ fontSize: 20 }} />
           </IconButton>
-          <IconButton
-            onClick={() => dispatch({ type: 'REM_TUSK', payload: { id } })}
-          >
+          <IconButton onClick={removeTask}>
             <DeleteOutlineIcon style={{ fontSize: 20 }} />
           </IconButton>
         </div>
