@@ -33,7 +33,7 @@ export const AddField: React.FC<Props> = ({ dispatch }) => {
         placeholder="Введите текст задачи..."
         fullWidth
         required
-        value={text} //Без такой записи выдаёт ошибку
+        value={text}
         onChange={(e) => setText(e.target.value)}
       />
       <Button type="submit">

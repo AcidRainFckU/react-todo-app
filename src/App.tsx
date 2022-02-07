@@ -11,14 +11,16 @@ type Todo = {
 
 enum Action {
   ADD_TUSK = 'ADD_TUSK',
-  REM_TUSK = 'REM_TUSK',
+  REMOVE_TUSK = 'REMOVE_TUSK',
   CHANGE_COMPLITED = 'CHANGE_COMPLITED',
+  CLEAR_TUSKS = 'CLEAR_TUSKS',
+  COMPLETE_ALL_TUSK = 'COMPLETE_ALL_TUSK',
 }
 
 type SetAction = {
   type: Action
   payload: {
-    id?: number
+    id: number
     text: string
     complited: boolean
   }
@@ -35,32 +37,23 @@ function reducer(state: Todo[], action: SetAction) {
           complited: action.payload.complited,
         },
       ]
-    case 'REM_TUSK':
-      if (action.payload?.id) {
-        return state.filter((tusk) => tusk.id !== action.payload.id)
-      } else {
-        return []
-      }
+    case 'REMOVE_TUSK':
+      return state.filter((tusk) => tusk.id !== action.payload.id)
+
     case 'CHANGE_COMPLITED':
-      if (action.payload?.id) {
-        return state.map((tusk) => {
-          if (tusk.id === action.payload.id) {
-            return { ...tusk, complited: !tusk.complited }
-          } else {
-            return tusk
-          }
-        })
-      } else {
-        if (!action.payload.complited) {
-          return state.map((tusk) => {
-            return { ...tusk, complited: false }
-          })
+      return state.map((tusk) => {
+        if (tusk.id === action.payload.id) {
+          return { ...tusk, complited: !tusk.complited }
         } else {
-          return state.map((tusk) => {
-            return { ...tusk, complited: true }
-          })
+          return tusk
         }
-      }
+      })
+    case 'CLEAR_TUSKS':
+      return []
+    case 'COMPLETE_ALL_TUSK':
+      return state.map((task) => {
+        return { ...task, complited: action.payload.complited }
+      })
 
     default:
       return state
@@ -70,22 +63,13 @@ function reducer(state: Todo[], action: SetAction) {
 function App() {
   const [state, dispatch] = useReducer(reducer, [])
 
-  const removeTask = (id?: number) => {
-    if (id) {
-      if (window.confirm('Удалить задачу?')) {
-        dispatch({ type: 'REM_TUSK', payload: { id } } as SetAction)
-      }
-    } else {
-      if (window.confirm('Удалить все задачи?')) {
-        dispatch({ type: 'REM_TUSK' } as SetAction)
-      }
+  const celarState = () => {
+    if (window.confirm('Удалить все задачи?')) {
+      dispatch({ type: 'CLEAR_TUSKS' } as SetAction)
     }
   }
-  const togleCheck = (id?: number, complited?: boolean) => {
-    dispatch({
-      type: 'CHANGE_COMPLITED',
-      payload: { id, complited },
-    } as SetAction)
+  const completeAllTusk = (complited: boolean) => {
+    dispatch({ type: 'COMPLETE_ALL_TUSK', payload: { complited } } as SetAction)
   }
 
   return (
@@ -106,27 +90,23 @@ function App() {
           {state.map((item: Todo) => (
             <Item
               text={item.text}
+              dispatch={dispatch}
               key={item.id}
               id={item.id}
               complited={item.complited}
-              removeTask={removeTask}
-              togleCheck={togleCheck}
             />
           ))}
         </List>
         <Divider />
         <div className="check-buttons">
-          <Button onClick={() => removeTask()}>Очистить</Button>
-
-          {state.every((el) => el.complited) ? (
-            <Button onClick={() => togleCheck(undefined, false)}>
-              Убрать все отметки
-            </Button>
+          {state.some((task) => task.complited === false) ? (
+            <Button onClick={() => completeAllTusk(true)}>Отметить всё</Button>
           ) : (
-            <Button onClick={() => togleCheck(undefined, true)}>
-              Отметить всё
+            <Button onClick={() => completeAllTusk(false)}>
+              Снять отметки
             </Button>
           )}
+          <Button onClick={celarState}>Очистить</Button>
         </div>
       </Paper>
     </div>
