@@ -1,75 +1,43 @@
-import { Paper, Divider, Button, List, Tabs, Tab } from '@mui/material'
-import { useReducer } from 'react'
+import { Paper, Divider, Button, List } from '@mui/material'
+import React from 'react'
 import { AddField } from './components/AddField'
 import { Item } from './components/Item'
+import { useSelector, useDispatch } from 'react-redux'
 
-type Todo = {
-  id: number
-  text: string
-  complited: boolean
-}
-
-enum Action {
-  ADD_TUSK = 'ADD_TUSK',
-  REMOVE_TUSK = 'REMOVE_TUSK',
-  CHANGE_COMPLITED = 'CHANGE_COMPLITED',
-  CLEAR_TUSKS = 'CLEAR_TUSKS',
-  COMPLETE_ALL_TUSK = 'COMPLETE_ALL_TUSK',
-}
-
-type SetAction = {
-  type: Action
-  payload: {
-    id: number
-    text: string
-    complited: boolean
-  }
-}
-
-function reducer(state: Todo[], action: SetAction) {
-  switch (action.type) {
-    case 'ADD_TUSK':
-      return [
-        ...state,
-        {
-          id: state.length > 0 ? state[state.length - 1].id + 1 : 1,
-          text: action.payload.text,
-          complited: action.payload.complited,
-        },
-      ]
-    case 'REMOVE_TUSK':
-      return state.filter((tusk) => tusk.id !== action.payload.id)
-
-    case 'CHANGE_COMPLITED':
-      return state.map((tusk) => {
-        if (tusk.id === action.payload.id) {
-          return { ...tusk, complited: !tusk.complited }
-        } else {
-          return tusk
-        }
-      })
-    case 'CLEAR_TUSKS':
-      return []
-    case 'COMPLETE_ALL_TUSK':
-      return state.map((task) => {
-        return { ...task, complited: action.payload.complited }
-      })
-
-    default:
-      return state
-  }
-}
+import { Reducer, Todo } from './types'
+import Filter from './components/Filter'
+import {
+  clearTusk,
+  completeAllTusk,
+  editTask,
+  fetchTasks,
+} from './redux/actions/tasks'
 
 function App() {
-  const [state, dispatch] = useReducer(reducer, [])
+  const dispatch = useDispatch()
+  const tasks = useSelector((state: Reducer) => state.tasks)
+  const filterBy = useSelector((state: Reducer) => state.filterBy)
+
+  React.useEffect(() => {
+    const localComments = JSON.parse(localStorage.getItem('tasks') || '[]')
+    dispatch(fetchTasks(localComments))
+  }, [])
+
+  React.useEffect(() => {
+    localStorage.setItem('tasks', JSON.stringify(tasks))
+  }, [tasks])
 
   const celarState = () => {
     if (window.confirm('Удалить все задачи?')) {
-      dispatch({ type: 'CLEAR_TUSKS' } as SetAction)
+      dispatch(clearTusk)
     }
   }
-  const completeAllTusk = (complited: boolean) => {
-    dispatch({ type: 'COMPLETE_ALL_TUSK', payload: { complited } } as SetAction)
+  const handleCompleteAllTusk = (complited: boolean) => {
+    dispatch(completeAllTusk(complited))
+  }
+
+  const handleEditTask = (id: number, text: string) => {
+    dispatch(editTask(id, text))
   }
 
   return (
@@ -78,35 +46,51 @@ function App() {
         <Paper className="header" elevation={0}>
           <h4>Список задач</h4>
         </Paper>
-        <AddField dispatch={dispatch} />
+        <AddField />
         <Divider />
-        <Tabs value={0}>
-          <Tab label="Все" />
-          <Tab label="Активные" />
-          <Tab label="Завершённые" />
-        </Tabs>
+        <Filter />
         <Divider />
         <List>
-          {state.map((item: Todo) => (
-            <Item
-              text={item.text}
-              dispatch={dispatch}
-              key={item.id}
-              id={item.id}
-              complited={item.complited}
-            />
-          ))}
+          {tasks
+            .filter((obj: Todo) => {
+              if (filterBy == 'all') {
+                return true
+              } else if (filterBy == 'completed') {
+                return obj.complited
+              } else if (filterBy == 'active') {
+                return !obj.complited
+              }
+            })
+            .map((item: Todo) => (
+              <Item
+                text={item.text}
+                key={item.id}
+                id={item.id}
+                complited={item.complited}
+                editTask={handleEditTask}
+              />
+            ))}
         </List>
         <Divider />
         <div className="check-buttons">
-          {state.some((task) => task.complited === false) ? (
-            <Button onClick={() => completeAllTusk(true)}>Отметить всё</Button>
+          {tasks.some((task: Todo) => task.complited === false) ? (
+            <Button
+              disabled={!tasks.length}
+              onClick={() => handleCompleteAllTusk(true)}
+            >
+              Отметить всё
+            </Button>
           ) : (
-            <Button onClick={() => completeAllTusk(false)}>
+            <Button
+              disabled={!tasks.length}
+              onClick={() => handleCompleteAllTusk(false)}
+            >
               Снять отметки
             </Button>
           )}
-          <Button onClick={celarState}>Очистить</Button>
+          <Button disabled={!tasks.length} onClick={celarState}>
+            Очистить
+          </Button>
         </div>
       </Paper>
     </div>
