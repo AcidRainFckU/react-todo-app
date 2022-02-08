@@ -1,21 +1,33 @@
-import React from 'react'
 import { IconButton, Checkbox, ListItem, Typography } from '@mui/material'
-
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 
+import React from 'react'
+import { useDispatch } from 'react-redux'
+
+import { removeTask } from '../redux/actions/tasks'
+
 type Props = {
   text: string
-  dispatch: any
   complited: boolean
   id: number
+  editTask: (id: number, text: string) => void
 }
-export const Item: React.FC<Props> = ({ text, dispatch, complited, id }) => {
-  const removeTask = () => {
+export const Item: React.FC<Props> = ({ editTask, text, complited, id }) => {
+  const dispatch = useDispatch()
+
+  const handleRemoveClick = () => {
     if (window.confirm('Удалить задачу?')) {
-      dispatch({ type: 'REMOVE_TUSK', payload: { id } })
+      dispatch(removeTask(id))
+    }
+  }
+
+  const handleEdit = () => {
+    const edit: string | null = window.prompt()
+    if (edit) {
+      editTask(id, edit)
     }
   }
 
@@ -32,10 +44,10 @@ export const Item: React.FC<Props> = ({ text, dispatch, complited, id }) => {
         />
         <Typography className="item-text">{text}</Typography>
         <div className="item-buttons d-flex">
-          <IconButton>
+          <IconButton onClick={handleEdit}>
             <EditIcon style={{ fontSize: 20 }} />
           </IconButton>
-          <IconButton onClick={removeTask}>
+          <IconButton onClick={handleRemoveClick}>
             <DeleteOutlineIcon style={{ fontSize: 20 }} />
           </IconButton>
         </div>

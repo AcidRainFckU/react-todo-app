@@ -2,25 +2,27 @@ import { TextField, Button, Checkbox } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+
 import { useState } from 'react'
+import { useDispatch } from 'react-redux'
 
-type Props = {
-  dispatch: any
-}
+import { addTask } from '../redux/actions/tasks'
 
-export const AddField: React.FC<Props> = ({ dispatch }) => {
+export const AddField = () => {
+  const dispatch = useDispatch()
+
   const [text, setText] = useState<string>('')
   const [checked, setChecked] = useState<boolean>(false)
 
-  function addTusk(event: any) {
+  function handleClickAdd(event: any) {
     event.preventDefault()
-    dispatch({ type: 'ADD_TUSK', payload: { text, complited: checked } })
+    dispatch(addTask(text, checked))
     setText('')
     setChecked(false)
   }
 
   return (
-    <form className="field" onSubmit={addTusk}>
+    <form className="field" onSubmit={handleClickAdd}>
       <Checkbox
         className="checkbox"
         icon={<RadioButtonUncheckedIcon />}
